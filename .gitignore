@@ -31,5 +31,5 @@
 # Dir
 .idea/*
 cmake-build-debug/*
-mmap/.idea/*
-mmap/cmake-build-debug/*
+*/.idea/
+*/cmake-build-debug/
