@@ -72,12 +72,8 @@ struct HTNode {
     struct HTNode *next;
 };
 
-template <typename Tp1, typename Tp2, typename Alloc>
+template <typename Tp1, typename Tp2>
 class HTable {
-private:
-    typedef typename Alloc::template rebind<Tp1>::other key_alloc_type;
-    typedef typename Alloc::template rebind<Tp2>::other val_alloc_type;
-    typedef typename Alloc::template rebind<HTNode<Tp1, Tp2> >::other node_alloc_type;
 public:
     typedef Tp1 key_type;
     typedef Tp2 value_type;
@@ -91,14 +87,73 @@ public:
               htable_(NULL) {
         htable_ = new(std::nothrow) htnode_pointer[bucket_size_];
     }
+    ~HTable() {
+        for (size_type i = 0; i < bucket_size_; ++i) {
+            while (NULL != htable_[i]) {
+                htnode_pointer itr = htable_[i];
+                htable_[i] = itr->next;
+                delete itr;
+            }
+        }
+        delete [] htable_;
+        htable_ = NULL;
+    }
 
-private:
+    int Resize(size_type size) {
+        //bucket_size_ = size;
+        //sizemask_ = size - 1;
+        size_used_ = 0;
+        htnode_pointer *new_htable_ = static_cast<htnode_pointer *>(realloc(htable_, size));
+        for (int i = 0; i < bucket_size_; ++i) {
+            new_htable_[i] = htable_[i];
+            if (NULL != htable_[i])
+                ++size_used_;
+        }
+        this->~HTable();
+        bucket_size_ = size;
+        sizemask_ = size - 1;
+        htable_ = new_htable_;
+    }
+
+public:
     size_type bucket_size_;
     size_type sizemask_;
     size_type size_used_;
     htnode_pointer *htable_;
+};
 
-    node_alloc_type node_alloc_;
+template <typename KeyType, typename ValType, typename HF = HashFunc,
+           typename EqualKey = std::equal_to<KeyType>,
+           typename Alloc = std::allocator<KeyType> >
+class HashTable {
+private:
+    typedef typename Alloc::template rebind<HTNode<KeyType, ValType>>::other node_allocator;
+public:
+    typedef unsigned int size_t;
+    typedef KeyType key_type;
+    typedef ValType value_type;
+    typedef HF hash_fun;
+    typedef EqualKey equal_type;
+    typedef HTable<key_type, value_type> htable;
+
+    int hset(const key_type &key, const value_type &val) {
+
+    }
+
+    value_type &hget(const key_type &key);
+    int hdel(const key_type &key);
+
+private:
+    bool isNeedToExpand() {
+        return false;
+    }
+    size_t genHashKey(const key_type &key);
+private:
+    htable tables[2];
+
+    hash_fun hash;
+    node_allocator alloc;
+    equal_type equal_key;
 };
 
 #endif //HASH_MAP_HASH_TABLE_H
