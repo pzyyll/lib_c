@@ -6,13 +6,13 @@
 using namespace std;
 
 int main() {
-    SkipList sl;
+    SkipList<string> sl;
 
     int iSize = 200;
     for (int i = 0; i < iSize; ++i) {
         int r = i;//random() % 100;
         if (sl.Search(r) == "")
-            sl.insert(r, to_string(r));
+            sl.Insert(r, to_string(r));
     }
 
     cout << sl.Search(1) << endl;
@@ -22,6 +22,11 @@ int main() {
     string str;
     if (str == "")
         cout << "yes" << endl;
+
+
+    if (is_same<int, int>::value)
+        cout << "yes" << endl;
+
 
     return 0;
 }

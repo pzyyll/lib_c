@@ -5,12 +5,15 @@
 #ifndef SKIPLIST_SKIPLIST_H
 #define SKIPLIST_SKIPLIST_H
 
+#include <string>
+#include <vector>
+#include <type_traits>
+#include <memory>
+
 #include <ctime>
 #include <cstdlib>
 #include <climits>
 
-#include <string>
-#include <vector>
 //namespace czl {
 
 static const float SKIPLIST_P = 0.25;
@@ -24,31 +27,47 @@ struct Data {
     unsigned lru;
 };
 
-template struct Data<std::string>;
-
+template <typename T>
 struct SkipListNode {
-    typedef Data<std::string> data_type;
+    typedef T val_type;
+    typedef Data<val_type> data_type;
 
-    SkipListNode() {}
-    SkipListNode(int level, double score, data_type &data)
-            : score(score), data(data) {
-        this->level.resize(level);
+    SkipListNode(int lvl, double score, const val_type &val, unsigned lru = 0)
+            : score(score),
+              backward(NULL) {
+        data.val = val;
+        data.lru = lru;
+        level.resize(lvl);
     }
-    ~SkipListNode() {}
+    ~SkipListNode() { }
+
+    struct SkipListLevel {
+        SkipListNode *forward;
+        unsigned span;
+    } /*level[]*/;
 
     data_type data;
     double score;
-    struct SkipListNode *backward;
-    struct SkipListLevel {
-        struct SkipListNode *forward;
-        unsigned span;
-    } /*level[]*/;
+    SkipListNode *backward;
     std::vector<SkipListLevel> level;
 };
 
+template <typename T>
+class DefaultValCmp {
+public:
+    bool operator()(const T &a, const T &b) {
+        return (a == b);
+    }
+};
+
+template struct SkipListNode<std::string>;
+
+template <typename Tp, typename ValCmp = DefaultValCmp<Tp>, typename Alloc = std::allocator<Tp>>
 class SkipList {
 public:
     typedef std::string data_type;
+    typedef SkipListNode<Tp> sl_node;
+    typedef typename Alloc::template rebind<sl_node>::other node_alloc;
 
     SkipList()
             : head_(NULL),
@@ -60,28 +79,28 @@ public:
     };
     ~SkipList() { };
 
-    data_type Search(int sorce) {
-        SkipListNode *x = head_;
+    data_type Search(int score) {
+        sl_node *x = head_;
         for (int i = level_ - 1; i >= 0; --i) {
             while (NULL != x->level[i].forward
-                   && x->level[i].forward->score < sorce) {
+                   && x->level[i].forward->score < score) {
                 x = x->level[i].forward;
             }
         }
         x = x->level[0].forward;
-        if (x != NULL && x->score == sorce) return x->data.val;
+        if (x != NULL && x->score == score) return x->data.val;
         else return "";
     }
 
-    int insert(int sore, const std::string &val) {
-        SkipListNode *update[MAXLEVEL], *x;
+    int Insert(int sore, const std::string &val) {
+        sl_node *update[MAXLEVEL], *x;
         int ranks[MAXLEVEL] = {0};
 
         x = head_;
         for (int i = level_ - 1; i >= 0; --i) {
             ranks[i] = i == (level_ - 1) ? 0 : ranks[i + 1];
-            while (NULL != x->level[i].forward
-                   && x->level[i].forward->score < sore) {
+            while ((NULL != x->level[i].forward)
+                   && (x->level[i].forward->score < sore)) {
                 ranks[i] += x->level[i].span;
                 x = x->level[i].forward;
             }
@@ -100,9 +119,9 @@ public:
                 }
                 level_ = lvl;
             }
-            SkipListNode::data_type data = {val, 0};
-            x = new(std::nothrow) SkipListNode(lvl, sore, data);
-            for (int i = 0; i < level_; ++i) {
+
+            x = make_node(lvl, sore, val);
+            for (int i = 0; i < lvl; ++i) {
                 x->level[i].forward = update[i]->level[i].forward;
                 update[i]->level[i].forward = x;
 
@@ -123,11 +142,11 @@ public:
         }
     }
 
-    unsigned lenth() { return lenth_; }
+    unsigned Lenth() { return lenth_; }
+
 private:
     void InitHead() {
-        SkipListNode::data_type data = {"", 0};
-        head_ = new(std::nothrow) SkipListNode(MAXLEVEL, -1, data);
+        head_ = make_node(MAXLEVEL, -1, "");
         for (int i = 0; i < MAXLEVEL; ++i) {
             head_->level[i].forward = NULL;
             head_->level[i].span = 0;
@@ -135,8 +154,16 @@ private:
         head_->backward = NULL;
     }
 
+    sl_node *make_node(int lvl, double score, const std::string &val) {
+        sl_node *pNode = alloc_.allocate(1);
+        alloc_.construct(pNode, lvl, score, val);
+
+        return pNode;
+    }
+
 private:
-    SkipListNode *head_, *tail_;
+    sl_node *head_, *tail_;
+    node_alloc alloc_;
     unsigned long lenth_;
     int level_;
 };
