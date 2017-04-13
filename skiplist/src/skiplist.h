@@ -9,6 +9,7 @@
 #include <vector>
 #include <type_traits>
 #include <memory>
+#include <iostream>
 
 #include <ctime>
 #include <cstdlib>
@@ -82,27 +83,50 @@ public:
 
     data_type Search(int score) {
         sl_node *x = head_;
+        //int cnt = 0;
         for (int i = level_ - 1; i >= 0; --i) {
             while (NULL != x->level[i].forward
                    && x->level[i].forward->score < score) {
                 x = x->level[i].forward;
+                //++cnt;
             }
+            //++cnt;
         }
+        //std::cout << "cnt:" << cnt << std::endl;
         x = x->level[0].forward;
         if (x != NULL && x->score == score) return x->data.val;
         else return "";
     }
 
-    int Insert(int sore, const std::string &val) {
+    unsigned long GetRank(double score, const data_type &val) {
+        unsigned long rank = 0;
+        sl_node *x = head_;
+        for (int i = level_ - 1; i >= 0; --i) {
+            while (NULL != x->level[i].forward
+                    && (x->level[i].forward->score < score
+                        || (x->level[i].forward->score == score))) {
+                rank += x->level[i].span;
+                x = x->level[i].forward;
+            }
+
+            if (cmp_(x->data.val, val)) {
+                return rank;
+            }
+        }
+        return 0;
+    }
+
+    int Insert(int score, const data_type &val) {
         sl_node *update[MAXLEVEL], *x;
         int ranks[MAXLEVEL] = {0};
 
         x = head_;
         for (int i = level_ - 1; i >= 0; --i) {
             ranks[i] = i == (level_ - 1) ? 0 : ranks[i + 1];
-            while ((NULL != x->level[i].forward)
-                   && (x->level[i].forward->score < sore)
-                   && !cmp_(x->level[i].forward->data.val, val)) {
+            while (NULL != x->level[i].forward
+                   && (x->level[i].forward->score < score
+                       || (x->level[i].forward->score == score
+                           && !cmp_(x->level[i].forward->data.val, val)))) {
                 ranks[i] += x->level[i].span;
                 x = x->level[i].forward;
             }
@@ -122,7 +146,7 @@ public:
             level_ = lvl;
         }
 
-        x = MakeNode(lvl, sore, val);
+        x = MakeNode(lvl, score, val);
         for (int i = 0; i < lvl; ++i) {
             x->level[i].forward = update[i]->level[i].forward;
             update[i]->level[i].forward = x;
@@ -143,6 +167,28 @@ public:
         ++lenth_;
     }
 
+    int Delete(double score, const data_type &val) {
+        sl_node *update[MAXLEVEL], *x;
+        x = head_;
+        for (int i = level_ - 1; i >= 0; --i) {
+            while (NULL != x->level[i].forward
+                   && (x->level[i].forward->score < score
+                       || (x->level[i].forward->score == score
+                           && !cmp_(x->level[i].forward->data.val, val)))) {
+                x = x->level[i].forward;
+            }
+            update[i] = x;
+        }
+        x = x->level[0].forward;
+        if (NULL != x && score == x->score && cmp_(x->data.val, val)) {
+            DeleteNode(x, update);
+            FreeNode(x);
+            return 0;
+        }
+
+        return -1; //not found
+    }
+
     unsigned Lenth() { return lenth_; }
 
 private:
@@ -155,6 +201,28 @@ private:
         head_->backward = NULL;
     }
 
+    //节点脱离
+    void DeleteNode(sl_node *x, sl_node *update[]) {
+        for (int i = 0; i < level_; ++i) {
+            if (update[i]->level[i].forward == x) {
+                update[i]->level[i].span += x->level[i].span - 1;
+                update[i]->level[i].forward = x->level[i].forward;
+            } else {
+                update[i]->level[i].span -= 1;
+            }
+        }
+
+        if (NULL != x->level[0].forward) {
+            x->level[0].forward->backward = x->backward;
+        } else {
+            tail_ = x->backward;
+        }
+
+        while (level_ > 1 && NULL == head_->level[level_-1].forward)
+            --level_;
+        ++lenth_;
+    }
+
     sl_node *MakeNode(int lvl, double score, const std::string &val) {
         sl_node *pNode = alloc_.allocate(1);
         alloc_.construct(pNode, lvl, score, val);
@@ -162,10 +230,10 @@ private:
         return pNode;
     }
 
-    int FreeNode(sl_node *dnode) {
-        alloc_.destroy(dnode);
-        alloc_.deallocate(dnode, 1);
-        dnode = NULL;
+    int FreeNode(sl_node *node) {
+        alloc_.destroy(node);
+        alloc_.deallocate(node, 1);
+        node = NULL;
         return 0;
     }
 
