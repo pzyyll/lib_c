@@ -14,6 +14,7 @@ int main() {
         if (sl.Search(r) == "")
             sl.Insert(r, to_string(r));
     }
+    sl.Insert(2, "2second");
 
     cout << sl.Search(1) << endl;
     cout << sl.Search(12) << endl;
@@ -26,6 +27,9 @@ int main() {
 
     if (is_same<int, int>::value)
         cout << "yes" << endl;
+
+    cout << sl.Lenth() << endl;
+    allocator<int> alloc;
 
 
     return 0;
