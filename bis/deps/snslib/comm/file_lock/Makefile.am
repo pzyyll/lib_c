@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS=foreign
+
+noinst_LIBRARIES=file_lock.a
+file_lock_a_SOURCES=file_lock.cpp

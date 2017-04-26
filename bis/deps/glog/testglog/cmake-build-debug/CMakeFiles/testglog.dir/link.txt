@@ -1,0 +1,1 @@
+/usr/bin/c++.exe  -g  -Wl,--enable-auto-import CMakeFiles/testglog.dir/main.cpp.o  -o testglog.exe -Wl,--out-implib,libtestglog.dll.a -Wl,--major-image-version,0,--minor-image-version,0  -L/cygdrive/d/Project/bis/bis/deps/glog/testglog/../lib -Wl,-Bstatic -lglog -Wl,-Bdynamic -lpthread 
