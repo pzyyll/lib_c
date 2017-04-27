@@ -2,9 +2,10 @@
 #include "ev++.h"
 #include <unistd.h>
 
-class Task {
-    void operator ()() {
+struct Task {
+    void operator ()(ev::io &w, int revents) {
         std::cout << "call back for task" << std::endl;
+        std::cout << revents << std::endl;
     }
 };
 
@@ -17,7 +18,7 @@ int main() {
 
     ioev.start(STDIN_FILENO, EV_READ);
 
-    main_loop.run();=
+    main_loop.run();
 
     std::cout << "Hello, World!" << std::endl;
     return 0;
