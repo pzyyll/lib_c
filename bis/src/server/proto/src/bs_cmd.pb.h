@@ -51,6 +51,7 @@ void InitDefaults();
 
 enum BS_CMD_ProtoclID {
   BS_CMD_ProtoclID_MSG_INI = 0,
+  BS_CMD_ProtoclID_MSG_HEAD_CHECK = 2457,
   BS_CMD_ProtoclID_MSG_SET_REQ = 4097,
   BS_CMD_ProtoclID_MSG_SET_RSP = 4098,
   BS_CMD_ProtoclID_MSG_SET_BATCH_REQ = 4099,
@@ -157,6 +158,8 @@ class BS_CMD : public ::google::protobuf::Message /* @@protoc_insertion_point(cl
   typedef BS_CMD_ProtoclID ProtoclID;
   static const ProtoclID MSG_INI =
     BS_CMD_ProtoclID_MSG_INI;
+  static const ProtoclID MSG_HEAD_CHECK =
+    BS_CMD_ProtoclID_MSG_HEAD_CHECK;
   static const ProtoclID MSG_SET_REQ =
     BS_CMD_ProtoclID_MSG_SET_REQ;
   static const ProtoclID MSG_SET_RSP =

@@ -88,23 +88,23 @@ void InitDefaults() {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] = {
-      "\n\014bs_cmd.proto\022\006bs_czl\"\371\003\n\006BS_CMD\"\356\003\n\tPr"
-      "otoclID\022\013\n\007MSG_INI\020\000\022\020\n\013MSG_SET_REQ\020\201 \022\020"
-      "\n\013MSG_SET_RSP\020\202 \022\026\n\021MSG_SET_BATCH_REQ\020\203 "
-      "\022\026\n\021MSG_SET_BATCH_RSP\020\204 \022\026\n\021MSG_GET_SCOR"
-      "E_REQ\020\205 \022\026\n\021MSG_GET_SCORE_RSP\020\206 \022\034\n\027MSG_"
-      "GET_SCORE_BATCH_REQ\020\207 \022\034\n\027MSG_GET_SCORE_"
-      "BATCH_RSP\020\210 \022\027\n\022MSG_RANK_QUERY_REQ\020\211 \022\027\n"
-      "\022MSG_RANK_QUERY_RSP\020\220 \022\035\n\030MSG_RANK_BATCH"
-      "_QUERY_REQ\020\221 \022\035\n\030MSG_RANK_BATCH_QUERY_RS"
-      "P\020\222 \022\030\n\023MSG_RANGE_QUERY_REQ\020\223 \022\030\n\023MSG_RA"
-      "NGE_QUERY_RSP\020\224 \022\037\n\032MSG_RANGEBYSCORE_QUE"
-      "RY_REQ\020\225 \022\037\n\032MSG_RANGEBYSCORE_QUERY_RSP\020"
-      "\226 \022\026\n\021MSG_TOP_QUERY_REQ\020\227 \022\026\n\021MSG_TOP_QU"
-      "ERY_RSP\020\230 b\006proto3"
+      "\n\014bs_cmd.proto\022\006bs_czl\"\216\004\n\006BS_CMD\"\203\004\n\tPr"
+      "otoclID\022\013\n\007MSG_INI\020\000\022\023\n\016MSG_HEAD_CHECK\020\231"
+      "\023\022\020\n\013MSG_SET_REQ\020\201 \022\020\n\013MSG_SET_RSP\020\202 \022\026\n"
+      "\021MSG_SET_BATCH_REQ\020\203 \022\026\n\021MSG_SET_BATCH_R"
+      "SP\020\204 \022\026\n\021MSG_GET_SCORE_REQ\020\205 \022\026\n\021MSG_GET"
+      "_SCORE_RSP\020\206 \022\034\n\027MSG_GET_SCORE_BATCH_REQ"
+      "\020\207 \022\034\n\027MSG_GET_SCORE_BATCH_RSP\020\210 \022\027\n\022MSG"
+      "_RANK_QUERY_REQ\020\211 \022\027\n\022MSG_RANK_QUERY_RSP"
+      "\020\220 \022\035\n\030MSG_RANK_BATCH_QUERY_REQ\020\221 \022\035\n\030MS"
+      "G_RANK_BATCH_QUERY_RSP\020\222 \022\030\n\023MSG_RANGE_Q"
+      "UERY_REQ\020\223 \022\030\n\023MSG_RANGE_QUERY_RSP\020\224 \022\037\n"
+      "\032MSG_RANGEBYSCORE_QUERY_REQ\020\225 \022\037\n\032MSG_RA"
+      "NGEBYSCORE_QUERY_RSP\020\226 \022\026\n\021MSG_TOP_QUERY"
+      "_REQ\020\227 \022\026\n\021MSG_TOP_QUERY_RSP\020\230 b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 538);
+      descriptor, 559);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "bs_cmd.proto", &protobuf_RegisterTypes);
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
@@ -130,6 +130,7 @@ const ::google::protobuf::EnumDescriptor* BS_CMD_ProtoclID_descriptor() {
 bool BS_CMD_ProtoclID_IsValid(int value) {
   switch (value) {
     case 0:
+    case 2457:
     case 4097:
     case 4098:
     case 4099:
@@ -156,6 +157,7 @@ bool BS_CMD_ProtoclID_IsValid(int value) {
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const BS_CMD_ProtoclID BS_CMD::MSG_INI;
+const BS_CMD_ProtoclID BS_CMD::MSG_HEAD_CHECK;
 const BS_CMD_ProtoclID BS_CMD::MSG_SET_REQ;
 const BS_CMD_ProtoclID BS_CMD::MSG_SET_RSP;
 const BS_CMD_ProtoclID BS_CMD::MSG_SET_BATCH_REQ;
