@@ -10,6 +10,7 @@ package bs_czl;
 message BS_CMD {
     enum ProtoclID {
         MSG_INI = 0X0;
+        MSG_HEAD_CHECK = 0X0999;
         MSG_SET_REQ = 0X1001;
         MSG_SET_RSP = 0X1002;
         MSG_SET_BATCH_REQ = 0X1003;

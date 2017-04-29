@@ -9,7 +9,8 @@
 
 struct MsgHead {
     int msg_len;
-    int cmd_id;
+    unsigned short cmd_id;
+    unsigned short check;
 };
 
 struct MsgApp {
