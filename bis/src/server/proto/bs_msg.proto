@@ -1,0 +1,133 @@
+//
+// @create by czl
+// @brief 通信协议
+//
+syntax = "proto3";
+package bs_czl;
+
+message MsgHead {
+    int32 msg_len = 1;
+    int32 cmd_id = 2;
+}
+
+message MsgSetMemData {
+    int32 score = 1;
+    string data = 2;
+}
+
+//MSG_SET_REQ = 0X1001;
+//MSG_SET_RSP = 0X1002;
+message MsgSetReq {
+    string key_id = 1;
+    MsgSetMemData data = 2;
+}
+message MsgSetRsp {
+    int32 ret = 1;
+    string err = 2;
+}
+
+//MSG_SET_BATCH_REQ = 0X1003;
+//MSG_SET_BATCH_RSP = 0X1004;
+message MsgSetBatchReq {
+    string key_id = 1;
+    repeated MsgSetMemData data_list = 2;
+}
+message MsgSetBatchRsp {
+    int32 ret = 1;
+    string err = 2;
+    int32 succ_num = 3;
+}
+
+//MSG_GET_SCORE_REQ = 0X1005;
+//MSG_GET_SCORE_RSP = 0X1006;
+message MsgGetScoreReq {
+    string key_id = 1;
+    string mem_info = 2;
+}
+message MsgGetScoreRsp {
+    int32 ret = 1;
+    string err = 2;
+    MsgSetMemData mem_data = 3;
+}
+
+//MSG_GET_SCORE_BATCH_REQ = 0X1007;
+//MSG_GET_SCORE_BATCH_RSP = 0X1008;
+message MsgGetScoreBatchReq {
+    string key_id = 1;
+    repeated string mem_data_list = 2;
+}
+message MsgGetScoreBatchRsp {
+    int32 ret = 1;
+    string err = 2;
+    repeated MsgSetMemData mem_data_list = 3;
+}
+
+message MsgRankInfo {
+    uint64 rank = 1;
+    MsgSetMemData data = 2;
+}
+
+//MSG_RANK_QUERY_REQ = 0X1009;
+//MSG_RANK_QUERY_RSP = 0X1010;
+message MsgRankQueryReq {
+    string key_id = 1;
+    string mem_info = 2;
+}
+message MsgRankQueryRsp {
+    int32 ret = 1;
+    string err = 2;
+    MsgRankInfo rank_info = 3;
+}
+
+//MSG_RANK_BATCH_QUERY_REQ = 0X1011;
+//MSG_RANK_BATCH_QUERY_RSP = 0X1012;
+message MsgRankBatchQueryReq {
+    string key_id = 1;
+    repeated string mem_info_list = 2;
+}
+message MsgRankBatchQueryRsp {
+    int32 ret = 1;
+    string err = 2;
+    repeated MsgRankInfo rank_info = 3;
+}
+
+message Range {
+    uint64 min = 1;
+    uint64 max = 2;
+}
+
+//MSG_RANGE_QUERY_REQ = 0X1013;
+//MSG_RANGE_QUERY_RSP = 0X1014;
+message MsgRangeQueryReq {
+    string key_id = 1;
+    Range range = 2;
+}
+message MsgRangeQueryRsp {
+    int32 ret = 1;
+    string err = 2;
+    repeated MsgRankInfo rank_info = 3;
+}
+
+//MSG_RANGEBYSCORE_QUERY_REQ = 0X1015;
+//MSG_RANGEBYSCORE_QUERY_RSP = 0X1016;
+message MsgRangeByScoreQueryReq {
+    string key_id = 1;
+    Range range = 2;
+}
+message MsgRangeByScoreQueryRsp {
+    int32 ret = 1;
+    string err = 2;
+    repeated MsgRankInfo rank_info = 3;
+}
+
+//MSG_TOP_QUERY_REQ = 0X1017;
+//MSG_TOP_QUERY_RSP = 0X1018;
+message MsgTopQueryReq {
+    string key_id = 1;
+    uint64 top = 2;
+}
+message MsgTopQueryRsp {
+    int32 ret = 1;
+    string err = 2;
+    MsgSetMemData mem_data = 3;
+}
