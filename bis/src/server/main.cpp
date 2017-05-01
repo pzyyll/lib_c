@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <signal.h>
-#include <bits/sigaction.h>
 
 #include "server_config.h"
 #include "server.h"
@@ -13,10 +12,6 @@ using namespace std;
 
 static void TermSigHandler(int sig) {
     LPSGLSVR->StopService();
-}
-
-static void SigpipeHandler(int sig) {
-    LOG_INFO("pipe");
 }
 
 int main (int argc, char **argv) {
@@ -43,8 +38,9 @@ int main (int argc, char **argv) {
     sigaction(SIGABRT, &sigact, NULL);
     sigaction(SIGTERM, &sigact, NULL);
     sigaction(SIGUSR1, &sigact, NULL);
-    
-    sigact.sa_handler = SigpipeHandler;
+
+    //默认的PIPE信号是关闭程序，当我们写一个被客户端关闭的套接字时会触发这个信号，需要忽视掉。
+    sigact.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sigact, NULL);
 
     LPSGLSVR->Run();
