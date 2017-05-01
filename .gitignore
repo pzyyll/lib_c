@@ -31,5 +31,7 @@
 # Dir
 .idea/*
 cmake-build-debug/*
-*/.idea/
-*/cmake-build-debug/
+*/.idea/*
+*/cmake-build-debug/*
+bis/src/server/cmake-build-debug/*
+bis/src/server/.idea/*
