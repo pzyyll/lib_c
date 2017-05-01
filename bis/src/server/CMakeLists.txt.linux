@@ -17,10 +17,13 @@ link_directories(./snslib)
 aux_source_directory(./ SOURCES)
 
 set(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_FLAGS_DEBUG "-g3 -Wall -Wextra -Wno-unused -pg")
 
 set(SOURCE_FILES ${SOURCES})
 
+
 add_executable(server ${SOURCE_FILES})
+add_definitions(-DLOG_DEF)
 ##.a/.so
 target_link_libraries(server -lglog)
 target_link_libraries(server -lpthread)

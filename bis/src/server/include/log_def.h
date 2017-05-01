@@ -40,31 +40,31 @@ inline void set_log_errorpath(const char *cstrPath) {
 inline void LOG_INFO(const char *cstrFormat, ...) {
     char buf[2048] = {0};
     va_list args;
-    va_start(cstrFormat, s);
-    vsnprintf(buf, sizeof(buf), s, args);
+    va_start(args, cstrFormat);
+    vsnprintf(buf, sizeof(buf), cstrFormat, args);
     va_end(args);
 
-    google::LOG(google::INFO) << buf << std::endl;
+    LOG(INFO) << buf << std::endl;
 }
 
 inline void LOG_WARN(const char *cstrFormat, ...) {
     char buf[2048] = {0};
     va_list args;
-    va_start(cstrFormat, s);
-    vsnprintf(buf, sizeof(buf), s, args);
+    va_start(args, cstrFormat);
+    vsnprintf(buf, sizeof(buf), cstrFormat, args);
     va_end(args);
 
-    google::LOG(google::WARNING) << buf << std::endl;
+    LOG(WARNING) << buf << std::endl;
 }
 
 inline void LOG_ERR(const char *cstrFormat, ...) {
     char buf[2048] = {0};
     va_list args;
-    va_start(cstrFormat, s);
-    vsnprintf(buf, sizeof(buf), s, args);
+    va_start(args, cstrFormat);
+    vsnprintf(buf, sizeof(buf), cstrFormat, args);
     va_end(args);
 
-    google::LOG(google::ERROR) << buf << std::endl;
+    LOG(ERROR) << buf << std::endl;
 }
 
 #else

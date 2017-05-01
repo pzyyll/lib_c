@@ -16,13 +16,15 @@ int main (int argc, char **argv) {
         return -1;
     }
 
-    if (SingletonServerCfg::instance()->Init("server.ini"/*argv[1]*/) != 0) {
+    if (SingletonServerCfg::instance()->Init(argv[1]) != 0) {
         return -1;
     }
 
     if (SingletonServerCfg::instance()->daemon_) {
         daemon(1, 0);
     }
+
+    LPSGLSVR->Run();
 
     return 0;
 }

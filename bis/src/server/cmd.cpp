@@ -25,6 +25,11 @@ int Cmd::Parse(const char *cszDataBuf, size_t uiDataLen) {
         return -1;
     }
 
+    if (uiPkgLen < sizeof(MsgHead)) {
+        LOG_WARN("pkg length is too short|pkglen(%u)", uiPkgLen);
+        return 0;
+    }
+
     if (uiPkgLen > uiDataLen) {
         LOG_WARN("pkg is incomplete.pkglen=%u, DataLen=%u", uiPkgLen, static_cast<unsigned int>(uiDataLen));
         return  0;
@@ -32,6 +37,8 @@ int Cmd::Parse(const char *cszDataBuf, size_t uiDataLen) {
 
     uCmdId_ = ntohs(pMsgHeader->cmd_id);
     uCheck_ = ntohs(pMsgHeader->check);
+
+    LOG_INFO("PARSE CMDID(%u), CHECK(%u)", uCmdId_, uCheck_);
 
     //无加密处理，最好还是加密数据！
     set_app_data(cszDataBuf + sizeof(MsgHead), uiPkgLen - sizeof(MsgHead));
@@ -60,6 +67,7 @@ bool Cmd::Serialize(BufferSequenceType &bs) {
     pMsgHeader->cmd_id = htons(uCmdId_);
     pMsgHeader->msg_len = htonl(sizeof(MsgHead) + strAppData_.size());
 
+    db1.Advance(sizeof(MsgHead));
     bs += db1;
     snslib::StaticBuffer sb2(strAppData_.c_str(), strAppData_.size());
     bs += sb2;

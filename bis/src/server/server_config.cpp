@@ -24,6 +24,12 @@ int ServerConfig::Init(const char *cstrFileName) {
 
     ret = InitLog();
 
+    cout << "==========SERVER============" << endl;
+    cout << "Daemon : " << daemon_ << endl;
+    cout << "IP     : " << ip_ << endl;
+    cout << "Port   : " << port_ << endl;
+
+    LOG_INFO("INIT SERVER");
     return ret;
 }
 

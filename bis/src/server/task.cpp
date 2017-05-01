@@ -107,6 +107,10 @@ void Task::Recv() {
         }
 
         objRecvBuff_.Advance(rvsize);
+        LOG_INFO("recv size(%d), rcv buff used(%u), rcv buff remain(%u)",
+                 rvsize,
+                 (unsigned)objRecvBuff_.UsedSize(),
+                 (unsigned)objRecvBuff_.Remain());
     }
 
 }
@@ -174,6 +178,7 @@ int Task::FlushSendQueue() {
         writen += n;
         bs.Advance(n);
         if (bs.Empty()) {
+            LOG_INFO("pop.");
             objSendQueue_.pop_front();
         }
     }
@@ -189,7 +194,9 @@ void Task::set_last_act_time(const unsigned int uiTime) {
 }
 
 void Task::HandleCmdMsg() {
+
     while(objRecvBuff_.UsedSize() > 0) {
+        LOG_INFO("Recv Buff Used Size | %u", (unsigned int)objRecvBuff_.UsedSize());
         objCmd_.Clear();
         int rv = objCmd_.Parse(objRecvBuff_.m_base_p, objRecvBuff_.UsedSize());
         if (rv < 0) {
@@ -203,7 +210,7 @@ void Task::HandleCmdMsg() {
 
         //TODO 执行实际的数据处理
         //test
-        LOG_INFO("handle cmd|%u|%s|", objCmd_.get_cmd_id(), objCmd_.get_app_data().c_str());
+        LOG_INFO("handle cmd|%u|%s|%d", objCmd_.get_cmd_id(), objCmd_.get_app_data().c_str(), rv);
         objCmd_.set_cmd_id(999);
         BufferSequenceType bs;
         if (!objCmd_.Serialize(bs)) {
@@ -212,6 +219,8 @@ void Task::HandleCmdMsg() {
         //TODO 添加请求频率限制
 
         Response(bs);
+
+        objRecvBuff_.MemMoveLeft(rv);
     }
 }
 
