@@ -30,6 +30,8 @@ public:
 
     int Run();
 
+    void StopService();
+
 private:
     int Init();
     int StartListen();
@@ -46,8 +48,6 @@ private:
     void AddTimeout(ExpireTimer& timer);
     int RemoveTimer(unsigned long long ullTimerID);
     void ExpireTimers(struct timeval *next_timeout);
-
-    void StopService();
 
 private:
     bool bLoop_;

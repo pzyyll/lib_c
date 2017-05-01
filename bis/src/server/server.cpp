@@ -48,6 +48,7 @@ int Server::Run() {
         }
     }
 
+    LOG_INFO("==========Exit===========");
     return ret;
 }
 
@@ -297,7 +298,7 @@ void Server::ExpireTimers(struct timeval *next_timeout) {
 }
 
 void Server::StopService() {
-
+    bLoop_ = 0;
 }
 
 
