@@ -18,7 +18,7 @@ int Cmd::Parse(const char *cszDataBuf, size_t uiDataLen) {
         return 0;
     }
 
-    MsgHead *pMsgHeader = reinterpret_cast<MsgHead *>(cszDataBuf);
+    const MsgHead *pMsgHeader = reinterpret_cast<const MsgHead *>(cszDataBuf);
     unsigned int uiPkgLen = ntohl(pMsgHeader->msg_len);
     if (uiPkgLen > MAX_CMD_LEN) {
         LOG_WARN("pkglen(%u) is too long than MAX_CMD_LEN(%u).", uiPkgLen, MAX_CMD_LEN);
@@ -103,7 +103,7 @@ unsigned Cmd::get_msg_idx() const {
     return uMsgIdx_;
 }
 
-std::string &Cmd::get_app_data() const {
+const std::string &Cmd::get_app_data() const {
     return strAppData_;
 }
 

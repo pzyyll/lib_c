@@ -29,7 +29,7 @@ public:
     ~Task();
 
     //@kick client
-    void Terminate(const char *cstrFormat, ...) __attribute__((format(printf, 1, 2)));
+    void Terminate(const char *cstrFormat, ...) __attribute__((format(printf, 2, 3)));
     bool IsTerminate();
 
     //@EPOLLIN CALL BACK

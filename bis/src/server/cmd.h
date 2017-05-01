@@ -30,7 +30,7 @@ public:
     unsigned get_cmd_id() const;
     unsigned get_check() const;
     unsigned get_msg_idx() const;
-    std::string &get_app_data() const;
+    const std::string &get_app_data() const;
 
     void set_cmd_id(unsigned short uCmdId);
     void set_check(unsigned short uCheck);

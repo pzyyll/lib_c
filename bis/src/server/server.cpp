@@ -99,7 +99,7 @@ int Server::StartListen() {
     if ("" == SingletonServerCfg::instance()->ip_) {
         addr.sin_addr.s_addr = INADDR_ANY;
     } else {
-        ret = inet_pton(AF_INET, SingletonServerCfg::instance()->ip_.c_str(), &addr.sin_addr)
+        ret = inet_pton(AF_INET, SingletonServerCfg::instance()->ip_.c_str(), &addr.sin_addr);
     }
 
     if (ret <  0) {
@@ -244,7 +244,7 @@ int Server::AcceptTask() {
 
         //TODO ADD Timer
 
-        LOG_INFO("conn succ.cli ip=%s|pos=%u", task->get_ip(), task->get_pos());
+        LOG_INFO("conn succ.cli ip=%s|pos=%u", task->get_ip().c_str(), task->get_pos());
     }
 
     return 0;
