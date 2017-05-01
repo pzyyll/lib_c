@@ -46,7 +46,7 @@ void Task::Terminate(const char *cstrFormat, ...) {
     bzero(buffer, sizeof(buffer));
 
     va_list args;
-    va_start(args, reason);
+    va_start(args, cstrFormat);
     vsnprintf(buffer, sizeof(buffer) - 1, cstrFormat, args);
     va_end(args);
 
@@ -159,7 +159,7 @@ int Task::FlushSendQueue() {
         n = ::writev(iSock_, vec, iovec_num);
         if (n < 0) {
             if (errno != EAGAIN && errno != EWOULDBLOCK) {
-                LOG_WARN("writev fail, err=%d, msg=%s", errno, stderr(errno));
+                LOG_WARN("writev fail, err=%d, msg=%s", errno, strerror(errno));
                 return -1;
             }
 
