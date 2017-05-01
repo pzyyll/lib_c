@@ -1,0 +1,18 @@
+message TimerInfo {
+  optional uint64 timer_id = 1;
+  optional uint32 timer_param = 2;
+}
+
+message TestAddTimer {
+  optional uint32 interval = 1;
+  optional uint32 timer_param = 2;
+}
+
+message BenchTestReq {
+  optional uint32 read_len = 1;
+  optional uint32 write_len = 2;
+}
+
+message BenchTestRsp {
+  optional bytes ret_buff = 1;
+}

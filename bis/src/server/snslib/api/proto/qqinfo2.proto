@@ -1,0 +1,63 @@
+package snslib.qqinfo2;
+
+message QQInfoRequest {
+    repeated fixed32 uin = 1;
+    optional uint32 app_id = 2;
+    optional uint32 key_type = 3;
+    optional bytes  session_key = 4;
+    optional fixed32  client_ip = 5;
+    optional fixed32  conn_svr_ip = 6;
+    optional int32 platform = 7;
+}
+
+message VipInfo
+{
+    optional int32 vipflag = 1; 
+}
+
+message QQInfoData
+{
+    message NickInfo
+    {
+        optional bytes nickname = 1;
+        optional bytes head_url = 2;
+        optional fixed64 updatetime = 3;
+    }
+
+    optional fixed32 uin = 1;
+    optional NickInfo qqnick = 2;
+    optional NickInfo xynick = 3;
+    optional uint32  vipflag = 4;
+    optional fixed64 updatetime = 5;
+}
+
+message QQInfoSync
+{
+    repeated QQInfoData qqinfo_data = 1;
+    optional int32 platform = 2;
+}
+
+message QQInfoResponse
+{
+    message QQInfo
+    {
+        optional fixed32 uin = 1;
+        optional bytes nickname = 2;
+        optional VipInfo fz_vip = 3;
+        optional VipInfo hz_vip = 4;
+        optional VipInfo lz_vip = 5;
+        optional bytes head_url = 6;
+    }
+
+    repeated QQInfo qqinfo = 1;  
+    optional int32 platform = 2;
+}
+
+enum QQInfoError
+{
+    QQINFO_GET_SIMPLEINFO_FAIL = -101;
+    QQINFO_GET_MSSFLAG_FAIL = -102;
+    QQINFO_PARSE_REQUEST_FAIL  = -103;
+    QQINFO_CHECK_LOGIN_FAIL = -104;
+    QQINFO_PLATFORM_NOTSUPPORT = -105;
+}

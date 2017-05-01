@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.7)
+project(server)
+
+set(INCLUDE ./include ./snslib)
+
+##include/.h
+include_directories(
+        ${INCLUDE}
+)
+
+##sub dir
+add_subdirectory(${INCLUDE})
+##
+
+link_directories(./snslib)
+
+aux_source_directory(./ SOURCES)
+
+set(CMAKE_CXX_STANDARD 11)
+
+set(SOURCE_FILES ${SOURCES})
+
+add_executable(server ${SOURCE_FILES})
+##.a/.so
+target_link_libraries(server -lglog)
+target_link_libraries(server -lpthread)
+target_link_libraries(server -lsns)
+target_link_libraries(server sinc)

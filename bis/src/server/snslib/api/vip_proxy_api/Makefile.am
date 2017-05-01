@@ -1,0 +1,5 @@
+AUTOMAKE_OPTIONS=foreign
+
+noinst_LIBRARIES=vip_proxy_api.a
+vip_proxy_api_a_SOURCES=vip_proxy_api.cpp
+

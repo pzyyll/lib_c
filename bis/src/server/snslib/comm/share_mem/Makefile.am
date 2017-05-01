@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS=foreign
+
+noinst_LIBRARIES=share_mem.a
+share_mem_a_SOURCES=share_mem.cpp

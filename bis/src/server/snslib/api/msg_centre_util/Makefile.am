@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS=foreign
+
+noinst_LIBRARIES=msg_centre_util.a
+msg_centre_util_a_SOURCES=msg_centre_util.cpp

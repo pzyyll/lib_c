@@ -7,11 +7,13 @@
 
 #include <google/protobuf/message.h>
 
+#pragma pack(1)
 struct MsgHead {
-    int msg_len;
+    unsigned int msg_len;
     unsigned short cmd_id;
     unsigned short check;
 };
+#pragma pack()
 
 struct MsgApp {
     MsgHead head;

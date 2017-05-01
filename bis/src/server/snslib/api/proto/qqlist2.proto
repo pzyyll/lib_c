@@ -1,0 +1,61 @@
+package snslib.qqlist2;
+
+enum QQListError
+{
+    QQLIST_GET_QQLIST_FAIL = -101;
+    QQLIST_GET_GROUPEDLIST_FAIL = -102;
+    QQLIST_PARSE_REQUEST_FAIL  = -103;
+    QQLIST_CHECK_LOGIN_FAIL = -104;
+    QQLIST_PLATFORM_NOTSUPPORT = -105;
+}
+
+// platform could be "qzone", "pengyou", "qqgame" etc.
+
+message QQListRequest
+{
+    optional uint32        app_id = 1;
+    optional uint32        key_type = 2;
+    optional bytes         session_key = 3;
+    optional fixed32       client_ip = 4;
+    optional fixed32       conn_svr_ip = 5;
+    optional int32         platform = 6;
+}
+
+message QQListResponse
+{
+    repeated fixed32 uin = 1;
+}
+
+message QQListArchive
+{
+    message FriendList
+    {
+        repeated fixed32    uin = 1;
+        optional fixed64   updatetime = 2;
+        optional fixed64   lastaccess = 3;
+        optional fixed64   timerid = 4;
+        optional int32     platform = 5; 
+    }
+
+    optional FriendList qq_list = 1;
+    optional FriendList xy_list = 2;
+}
+
+message CheckFriendRequest
+{
+    optional fixed32       friend_uin = 1;
+    optional uint32        app_id = 2;
+    optional uint32        key_type = 3;
+    optional bytes         session_key = 4;
+    optional fixed32       client_ip = 5;
+    optional fixed32       conn_svr_ip = 6;
+    optional int32         platform = 7;
+}
+
+
+message CheckFriendResponse
+{
+    // 0 means not friends
+    optional int32 ret = 1;
+}
+
