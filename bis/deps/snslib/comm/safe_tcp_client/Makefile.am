@@ -1,4 +1,0 @@
-AUTOMAKE_OPTIONS=foreign
-
-noinst_LIBRARIES=safe_tcp_client.a
-safe_tcp_client_a_SOURCES=safe_tcp_client.cpp

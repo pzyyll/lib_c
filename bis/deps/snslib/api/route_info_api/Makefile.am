@@ -1,4 +1,0 @@
-AUTOMAKE_OPTIONS=foreign
-
-noinst_LIBRARIES=route_info_api.a
-route_info_api_a_SOURCES=route_info_api.cpp

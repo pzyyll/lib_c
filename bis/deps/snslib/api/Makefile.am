@@ -1,1 +1,0 @@
-SUBDIRS= route_info_api transaction_api oidb_api proto paysvr_api msg_centre_util shmconf_api vip_proxy_api sns_oidb_api adopt_api

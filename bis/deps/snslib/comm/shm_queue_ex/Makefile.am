@@ -1,4 +1,0 @@
-AUTOMAKE_OPTIONS=foreign
-
-noinst_LIBRARIES=shm_queue_ex.a
-shm_queue_ex_a_SOURCES=shm_queue_ex.cpp  shm_queue_unique.cpp

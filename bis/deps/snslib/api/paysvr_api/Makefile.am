@@ -1,4 +1,0 @@
-AUTOMAKE_OPTIONS=foreign
-
-noinst_LIBRARIES=paysvr_api.a
-paysvr_api_a_SOURCES=paysvr_proto.cpp paysvr_api.cpp
