@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS=foreign
+
+noinst_LIBRARIES=app_transaction_api.a
+app_transaction_api_a_SOURCES=app_transaction_api.cpp

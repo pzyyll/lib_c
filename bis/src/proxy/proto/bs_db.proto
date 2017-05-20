@@ -1,0 +1,32 @@
+//
+// @create by czl
+// @brief db存储格式
+//
+syntax = "proto3";
+package bs_czl;
+
+enum MsgNodeType {
+    VERSION = 0;
+    TABLE = 1;
+    KEY = 2;
+}
+
+message MsgDbNode {
+    MsgNodeType type = 1;
+    bytes data = 2;
+}
+
+message MsgDbVersion {
+    bytes version = 1;
+    bytes auth = 2;
+}
+
+message MsgDbTable {
+    bytes key_id = 1;
+    uint64 length = 2;
+}
+
+message MsgDbKey {
+    repeated bytes key = 1;
+    repeated bytes val = 2;
+}

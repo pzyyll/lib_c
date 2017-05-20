@@ -35,3 +35,7 @@ cmake-build-debug/*
 */cmake-build-debug/*
 bis/src/server/cmake-build-debug/*
 bis/src/server/.idea/*
+bis/src/client/cmake-build-debug/*
+bis/src/client/.idea/*
+bis/src/proxy/cmake-build-debug/*
+bis/src/proxy/.idea/*

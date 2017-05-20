@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS=foreign
+
+noinst_LIBRARIES=tt_feeds_api.a
+tt_feeds_api_a_SOURCES=tt_feeds_api.cpp

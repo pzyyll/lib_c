@@ -11,7 +11,7 @@
 using namespace std;
 
 static void TermSigHandler(int sig) {
-    LPSGLSVR->StopService();
+    //LPSGLSVR->StopService();
 }
 
 int main (int argc, char **argv) {
@@ -21,13 +21,13 @@ int main (int argc, char **argv) {
         return -1;
     }
 
-    if (SingletonServerCfg::instance()->Init(argv[1]) != 0) {
-        return -1;
-    }
+//    if (SingletonServerCfg::instance()->Init(argv[1]) != 0) {
+//        return -1;
+//    }
 
-    if (SingletonServerCfg::instance()->daemon_) {
-        daemon(1, 0);
-    }
+//    if (SingletonServerCfg::instance()->daemon_) {
+//        daemon(1, 0);
+//    }
 
     //hook sig
     struct sigaction sigact;
@@ -43,6 +43,7 @@ int main (int argc, char **argv) {
     sigact.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sigact, NULL);
 
+    LPSGLSVR->Init(argc, argv);
     LPSGLSVR->Run();
 
     return 0;

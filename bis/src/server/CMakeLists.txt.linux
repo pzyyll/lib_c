@@ -10,6 +10,7 @@ include_directories(
 
 ##sub dir
 add_subdirectory(${INCLUDE})
+add_subdirectory(./proto)
 ##
 
 link_directories(./snslib)
@@ -25,7 +26,10 @@ set(SOURCE_FILES ${SOURCES})
 add_executable(server ${SOURCE_FILES})
 add_definitions(-DLOG_DEF)
 ##.a/.so
+target_link_libraries(server -lzmq)
 target_link_libraries(server -lglog)
 target_link_libraries(server -lpthread)
 target_link_libraries(server -lsns)
 target_link_libraries(server sinc)
+target_link_libraries(server bsproto)
+target_link_libraries(server -lprotobuf)

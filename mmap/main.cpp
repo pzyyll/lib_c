@@ -96,5 +96,11 @@ int main() {
 
     cout << sysconf(_SC_PAGESIZE) << endl;
 
+    mkdir("./log/", S_IRWXU);
+    mkdir("./log/info", S_IRWXU);
+
+    mkdir("./logg/info", S_IRWXU);
+    EACCES;
+    cout << errno << endl;
     return 0;
 }

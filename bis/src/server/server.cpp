@@ -1,306 +1,345 @@
 //
-// Created by czllo on 2017/4/26.
+// @Created by czllo on 2017/4/26.
+// @breif 代码重复率极高，以后再想办法优化优化
 //
 
 #include "server.h"
 
 using namespace std;
+using namespace tnt;
 
-Server::Server() : bLoop_(0), iSock_(-1), iPosCnt(0) {
+int Server::OnInit(const char *conf_file) {
 
+    if (LPSVRCFG->Init(conf_file) < 0)
+        return -1;
+
+    if (LPMQMGR->Init() < 0)
+        return -1;
+
+    LPDB->CheckDbFileAndLoad();
+
+    uiLastSaveTime = time(NULL);
+    chilld_pid = -1;
+
+    return 0;
 }
 
-Server::~Server() {
-
-}
-
-int Server::Run() {
-    int ret = SUCCSESS;
-
-    if ((ret = StartListen()) < 0) {
-        LOG_ERR("start listen err.");
-        return ret;
-    }
-
-    struct epoll_event evs[EPOLL_MAX_EVS];
-
-    bLoop_ = 1;
-    while(bLoop_) {
-        //main loop
-        int bWorking = false;
-        errno = 0;
-        int nds = LPEPOLLHLD->EpollWait(evs, EPOLL_MAX_EVS);
-        if (nds > 0) {
-            bWorking = true;
-            LOG_INFO("epoll wait. recv(%d)", nds);
-            HldAllEvs(evs, nds);
-
-        } else {
-            if (nds < 0 && EINTR != errno) {
-                LOG_ERR("epoll_wait fail|%s", strerror(errno));
-            }
-            //LOG_INFO("sig intr or nothin can be do");
-        }
-
-        //TODO 处理其它事务
-        if (!bWorking) {
-            usleep(static_cast<__useconds_t>(LPSVRCFG->free_time_sleep_));
-        }
-    }
-
-    LOG_INFO("==========Exit===========");
+int Server::OnProc() {
+    int ret = 0;
+    ret = ProcessMQRecv();
     return ret;
 }
 
-int Server::Init() {
-    int ret = SUCCSESS;
-
-    ret = LPEPOLLHLD->EpollInit();
-
-    return ret;
-}
-
-int Server::StartListen() {
-    int ret = SUCCSESS;
-
-    //0.Init
-    if ((ret = Init() ) < 0) {
-        LOG_ERR("Init Server fail.");
-        return ret;
-    }
-
-    //1.create listen socket fd;
-    iSock_ = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (iSock_ < 0) {
-        LOG_ERR("create socket fd fail.");
-        ret = FAIL;
-        return ret;
-    }
-
-    int nodelay = 1;
-    if ((ret = ::setsockopt(iSock_, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(nodelay)) ) < 0) {
-        LOG_ERR("setsockopt nodelay fail.");
-        return ret;
-    }
-
-    int reuse = 1;
-    if ((ret = ::setsockopt(iSock_, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) ) < 0) {
-        LOG_ERR("setsockopt addr reuse fail.");
-        return ret;
-    }
-
-    if ((ret = MakeNonBlocking(iSock_) ) < 0) {
-        return ret;
-    }
-
-    struct sockaddr_in addr;
-    bzero(&addr, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(SingletonServerCfg::instance()->port_);
-    if ("" == SingletonServerCfg::instance()->ip_) {
-        addr.sin_addr.s_addr = INADDR_ANY;
-    } else {
-        ret = inet_pton(AF_INET, SingletonServerCfg::instance()->ip_.c_str(), &addr.sin_addr);
-    }
-
-    if (ret <  0) {
-        LOG_ERR("IP INVAILD.");
-        return ret;
-    }
-
-    //2.bind listen fd
-    if ((ret = ::bind(iSock_, (struct sockaddr *)&addr, sizeof(addr)) ) < 0) {
-        LOG_WARN("bind fail for fd(%d).", iSock_);
-        return ret;
-    }
-
-    //3.listen fd.
-    if ((ret = ::listen(iSock_, 4096)) < 0) {
-        LOG_WARN("listen fail|%d|", iSock_);
-        return ret;
-    }
-
-    if (0 != LPEPOLLHLD->EpollAdd(iSock_, LISTEN_TASK_POS, EPOLLIN)) {
-        LOG_WARN("add to epoll fail for listen fd.");
-        ret = FAIL;
-        return ret;
-    }
-
-    LOG_INFO("=====Start Listen=====");
-    return ret;
-}
-
-int Server::MakeNonBlocking(int fd) {
-    int val = ::fcntl(fd, F_GETFL, 0);
-    if (val < 0)
-    {
-        LOG_ERR("get stat for fd(%d) fail.", fd);
+//@CZL 说一次循环处理不要太多信息，那就每次最多10个吧
+int Server::ProcessMQRecv() {
+    std::vector<string> msgs;
+    if (LPMQMGR->RecvMsgs(msgs, 10) <= 0) {
         return -1;
     }
 
-    val |= O_NONBLOCK;
-    if (::fcntl(fd, F_SETFL, val) < 0)
-    {
-        LOG_ERR("set blocking for fd(%d) fail.", fd);
-        return -1;
+    LOG(INFO) << "hand msgs size " << msgs.size() << endl;
+
+    for (int i = 0; i < msgs.size(); ++i) {
+        ProcessMQMsg(msgs[i]);
     }
 
     return 0;
 }
 
-void Server::HldAllEvs(struct epoll_event *evs, int nds) {
-    if (NULL == evs) {
-        LOG_WARN("What hapen this null ptr?");
+void Server::ProcessMQMsg(const std::string &data) {
+    transApp.Clear();
+    if (!transApp.ParseFromString(data)) {
+        LOG(ERROR) << "Parse Data Fail. Data Len=" << data.size() << endl;
         return;
     }
 
-    for(int i = 0; i < nds; ++i) {
-        unsigned int cpos = evs[i].data.u32;
-        if (LISTEN_TASK_POS == cpos) {
-            if (evs[i].events & EPOLLIN) {
-                AcceptTask();
-            } else {
-                LOG_WARN("happen event(%u) is not intre", evs[i].events);
-            }
-        } else {
-            TaskPtr pTask = FindTask(cpos);
-            if (!pTask) {
-                LOG_WARN("not find task, pos=%u", cpos);
-                continue;
-            }
-
-            if (evs[i].events & EPOLLOUT) {
-                pTask->OnSockWriteHdl();
-                if (pTask->IsTerminate()) {
-                    RemoveTask(cpos);
-                }
-            }
-            if (evs[i].events & EPOLLIN) {
-                pTask->OnSockReadHdl();
-                if (pTask->IsTerminate()) {
-                    RemoveTask(cpos);
-                }
-            }
-
-            if (evs[i].events & EPOLLERR)
-            {
-                pTask->Terminate("EPOLLERR");
-                RemoveTask(cpos);
-                continue;
-            } else if (evs[i].events & EPOLLHUP)
-            {
-                pTask->Terminate("EPOLLHUP");
-                RemoveTask(cpos);
-                continue;
-            }
-        }
+    LOG(INFO) << "Cmd Data:" << transApp.ShortDebugString() << endl;
+    switch (transApp.cmd_id()) {
+        case bs_czl::BS_CMD::MSG_SET_BATCH_REQ:
+            ProcessDbSet();
+            break;
+        case bs_czl::BS_CMD::MSG_GET_SCORE_BATCH_REQ:
+            ProcessDbGetScore();
+            break;
+        case bs_czl::BS_CMD::MSG_RANK_BATCH_QUERY_REQ:
+            ProcessDbRankQuery();
+            break;
+        case bs_czl::BS_CMD::MSG_RANGE_QUERY_REQ:
+            ProcessDbRangeByRank();
+            break;
+        case bs_czl::BS_CMD::MSG_RANGEBYSCORE_QUERY_REQ:
+            ProcessDbRangeByScore();
+            break;
+        case bs_czl::BS_CMD::MSG_TOP_QUERY_REQ:
+            ProcessDbTopQuery();
+            break;
+        default:
+            LOG(WARNING) << "Cmd Id(" << transApp.cmd_id() << ") is invaild." << endl;
+            break;
     }
 }
 
-int Server::AcceptTask() {
+void Server::ProcessDbSet() {
+    bs_czl::MsgSetBatchReq req;
+    bs_czl::MsgSetBatchRsp rsp;
 
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    socklen_t iLen = sizeof(addr);
+    if (Parse(req) < 0)
+        return;
+    LOG(INFO) << "Set data : " << req.ShortDebugString() << endl;
 
-    while (true) {
-        int cli_fd = ::accept(iSock_, (struct sockaddr *)&addr, &iLen);
-        if (cli_fd < 0) {
-            if (EAGAIN != errno)
-                LOG_WARN("accept fail.errmsg=%s", strerror(errno));
+    for (int i = 0; i < req.data_list_size(); ++i) {
+        if(LPDB->Insert(req.key_id(), req.data_list(i).score(), req.data_list(i).data())) {
+            rsp.set_succ_num(rsp.succ_num() + 1);
+        }
+    }
+    rsp.set_ret(0);
+    //rsp.set_err("Succ.");
+
+    LOG(INFO) << "rsp : " << rsp.ShortDebugString() << endl;
+    Respone(rsp);
+}
+
+void Server::ProcessDbGetScore() {
+    bs_czl::MsgGetScoreBatchReq req;
+    bs_czl::MsgGetScoreBatchRsp rsp;
+
+    if (Parse(req) < 0)
+        return;
+    LOG(INFO) << "Set data : " << req.ShortDebugString() << endl;
+
+    for (int i = 0; i < req.mem_data_list_size(); ++i) {
+        double score = 0;
+        bs_czl::MsgSetMemData *item = rsp.add_mem_data_list();
+        assert(item != NULL);
+        if (!LPDB->GetMemScore(req.key_id(), req.mem_data_list(i).data(), score)) {
+            item->set_data("No Find!");
+            continue;
+        }
+        item->set_data(req.mem_data_list(i).data());
+        item->set_score(score);
+    }
+    rsp.set_ret(0);
+    rsp.set_err("Succ.");
+
+    LOG(INFO) << "rsp : " << rsp.ShortDebugString() << endl;
+    Respone(rsp);
+}
+
+void Server::ProcessDbRankQuery() {
+    bs_czl::MsgRankBatchQueryReq req;
+    bs_czl::MsgRankBatchQueryRsp rsp;
+
+    if (Parse(req) < 0)
+        return;
+    LOG(INFO) << "Set data : " << req.ShortDebugString() << endl;
+
+    for (int i = 0; i < req.mem_info_list_size(); ++i) {
+        unsigned long long rank;
+        double score;
+        bs_czl::MsgRankInfo *item = rsp.add_rank_info();
+        assert(item != NULL);
+        if (!LPDB->GetMemRank(req.key_id(), req.mem_info_list(i), rank)) {
+            item->mutable_data()->set_data("No Find!");
+            continue;
+        }
+        LPDB->GetMemScore(req.key_id(), req.mem_info_list(i), score);
+        item->set_rank(rank);
+        item->mutable_data()->set_data(req.mem_info_list(i));
+        item->mutable_data()->set_score(score);
+    }
+
+    rsp.set_ret(0);
+    rsp.set_err("Succ.");
+
+    LOG(INFO) << "rsp : " << rsp.ShortDebugString() << endl;
+    Respone(rsp);
+}
+
+void Server::ProcessDbRangeByRank() {
+    bs_czl::MsgRangeQueryReq req;
+    bs_czl::MsgRangeQueryRsp rsp;
+
+    if (Parse(req) < 0)
+        return;
+    LOG(INFO) << "Set data : " << req.ShortDebugString() << endl;
+
+    do {
+        db::node_itr_type itr = LPDB->GetMemsFirstByRank(req.key_id(), req.range().min(), req.range().max());
+        if (itr == LPDB->end()) {
+            rsp.set_ret(bs_czl::MSG_RET::FAIL);
+            rsp.set_err(LPDB->GetErr());
             break;
         }
-
-        unsigned int cpos = (++iPosCnt == LISTEN_TASK_POS) ? ++iPosCnt : iPosCnt;
-        LOG_INFO("new pos for accept cli|%u", cpos);
-
-        if (MakeNonBlocking(cli_fd) < 0)
-            return FAIL;
-
-        int iNoDelay = 1;
-        if (::setsockopt(cli_fd, IPPROTO_TCP, TCP_NODELAY, &iNoDelay, sizeof(iNoDelay)) < 0) {
-            LOG_WARN("setsockopt fail.errmsg=%s", strerror(errno));
-            return FAIL;
+        unsigned long long cnt = 0, min = req.range().min(), max = req.range().max();
+        if (min > max) {
+            unsigned long long t = min;
+            min = max;
+            max = t;
         }
+        unsigned long long num = max - min + 1;
+        for (; itr != LPDB->end() && cnt < num; ++cnt, ++itr) {
+            bs_czl::MsgRankInfo *item = rsp.add_rank_info();
+            item->set_rank(min + cnt);
+            item->mutable_data()->set_score(itr->score);
+            item->mutable_data()->set_data(itr->data.val);
 
-        int iSendBuffSize = 4 * 32768;
-        int iRecvBuffSize = 4 * 32768;
-
-        if (::setsockopt(cli_fd, SOL_SOCKET, SO_SNDBUF, &iSendBuffSize, sizeof(iSendBuffSize)) < 0) {
-            LOG_WARN("setsockopt fail.errmsg=%s", strerror(errno));
-            return FAIL;
+            LOG(INFO) << "Info " << item->ShortDebugString() << endl;
         }
+        rsp.set_ret(0);
+        rsp.set_err("Succ.");
+    } while (false);
 
-        if (::setsockopt(cli_fd, SOL_SOCKET, SO_RCVBUF, &iRecvBuffSize, sizeof(iRecvBuffSize)) < 0) {
-            LOG_WARN("setsockopt fail.errmsg=%s", strerror(errno));
-            return FAIL;
+    rsp.set_ret(0);
+    rsp.set_err("Succ.");
+    LOG(INFO) << "rsp : " << rsp.ShortDebugString() << endl;
+    Respone(rsp);
+}
+
+void Server::ProcessDbRangeByScore() {
+    bs_czl::MsgRangeByScoreQueryReq req;
+    bs_czl::MsgRangeByScoreQueryRsp rsp;
+
+    if (Parse(req) < 0)
+        return;
+    LOG(INFO) << "Set data : " << req.ShortDebugString() << endl;
+
+    do {
+        db::node_pair_type pair = LPDB->GetMemsByScore(req.key_id(), req.range().min(), req.range().max());
+        if (!LPDB->GetErr().empty()) {
+            rsp.set_ret(bs_czl::MSG_RET::FAIL);
+            rsp.set_err(LPDB->GetErr());
+            break;
         }
+        db::node_itr_type itr = pair.first;
+        unsigned long long rank = 0;
+        LPDB->GetMemRank(req.key_id(), itr->data.val, rank);
+        for (; itr != pair.second; ++itr, ++rank) {
+            auto item = rsp.add_rank_info();
+            item->set_rank(rank);
+            item->mutable_data()->set_score(itr->score);
+            item->mutable_data()->set_data(itr->data.val);
 
-        TaskPtr task(new Task(cpos, cli_fd, addr));
-        if (LPEPOLLHLD->EpollAdd(cli_fd, cpos, EPOLLIN) < 0) {
-            task->Terminate("epoll add fail|errmsg=%s", strerror(errno));
-            return FAIL;
+            LOG(INFO) << "Info " << item->ShortDebugString() << endl;
         }
+        auto item = rsp.add_rank_info();
+        item->set_rank(rank);
+        item->mutable_data()->set_score(pair.second->score);
+        item->mutable_data()->set_data(pair.second->data.val);
 
-        objTaskMap.insert(make_pair(cpos, task));
+        rsp.set_ret(0);
+        rsp.set_err("Succ.");
+    } while (false);
 
-        //TODO ADD Timer
+    LOG(INFO) << "rsp : " << rsp.ShortDebugString() << endl;
+    Respone(rsp);
+}
 
-        LOG_INFO("conn succ.cli ip=%s|pos=%u", task->get_ip().c_str(), task->get_pos());
+void Server::ProcessDbTopQuery() {
+    bs_czl::MsgTopQueryReq req;
+    bs_czl::MsgTopQueryRsp rsp;
+
+    if (Parse(req) < 0)
+        return;
+    LOG(INFO) << "Set data : " << req.ShortDebugString() << endl;
+
+    db::node_itr_type itr = LPDB->GetMemByRank(req.key_id(), req.top());
+    if (itr == LPDB->end()) {
+        rsp.set_ret(bs_czl::MSG_RET::FAIL);
+        rsp.set_err(LPDB->GetErr());
+    } else {
+        rsp.set_ret(bs_czl::MSG_RET::SUCCESS);
+        rsp.mutable_mem_data()->set_data(itr->data.val);
+        rsp.mutable_mem_data()->set_score(itr->score);
+    }
+
+    LOG(INFO) << "rsp : " << rsp.ShortDebugString() << endl;
+    Respone(rsp);
+}
+
+int Server::Parse(::google::protobuf::Message &msg) {
+    if (!msg.ParseFromString(transApp.app_data())) {
+        LOG(WARNING) << "Parse Req Data Fail.|" << transApp.app_data()
+                     << "|" << transApp.ShortDebugString() << endl;
+        return -1;
+    }
+    return 0;
+}
+
+int Server::Respone(const ::google::protobuf::Message &data) {
+    bs_czl::MsgTransApp rsp;
+
+    rsp.set_client_pos(transApp.client_pos());
+    rsp.set_app_data(data.SerializeAsString());
+
+    LOG(INFO) << "RSP:" << rsp.ShortDebugString() << endl;
+    LPMQMGR->SendMsg(transApp.src(), rsp);
+    return 0;
+}
+
+int Server::OnTick() {
+    LOG(INFO) << "====Tick=====" << endl;
+    WaitChilen();
+    return ApplicationBase::OnTick();
+}
+
+int Server::OnExit() {
+    LPDB->SaveToFile();
+    LOG(INFO) << "======EXIT=========" << endl;
+    return ApplicationBase::OnExit();
+}
+
+int Server::OnStop() {
+    LOG(INFO) << "======Stop=========" << endl;
+    return ApplicationBase::OnStop();
+}
+
+int Server::OnIdle() {
+    time_t now = time(NULL);
+
+    //空闲时保存
+    if (static_cast<int>(now - uiLastSaveTime) > LPSVRCFG->persistend_time_) {
+        LPDB->BgSaveDb();
     }
 
     return 0;
 }
 
-TaskPtr Server::FindTask(unsigned int pos) {
-    TaskMapItr itr = objTaskMap.find(pos);
-    if (objTaskMap.end() == itr)
-        return TaskPtr();
-    return itr->second;
+void Server::CloseAllListenSockets() {
+    LPMQMGR->CloseAll();
 }
 
-void Server::RemoveTask(unsigned int pos) {
-    LOG_INFO("close task, pos=%u", pos);
+int Server::WaitChilen() {
+    //有BUG这里总是没有进来？？
+    if (chilld_pid != -1) {
+        int staloc;
+        pid_t pid;
+        if ((pid = wait3(&staloc, WNOHANG, NULL)) > 0) {
+            int exitcode = WEXITSTATUS(staloc);
+            int bysignal = 0;
+            if (WIFSIGNALED(staloc)) bysignal = WTERMSIG(staloc);
 
-    TaskMapItr itr = objTaskMap.find(pos);
-    if (itr != objTaskMap.end()) {
-        RemoveTask(itr);
+            if (!bysignal && exitcode == 0) {
+                LOG(INFO) << "Bg Save Succ." << endl;
+                uiLastSaveTime = time(NULL);
+            } else if (!bysignal && exitcode != 0) {
+                LOG(WARNING) << "Bg Save Fail." << endl;
+            } else {
+                LOG(WARNING) << "Bg Save terminated by signal " << bysignal << endl;
+                //rmfile
+                string tmp = LPSVRCFG->db_file_ + ".tmp";
+                unlink(tmp.c_str());
+            }
+
+            chilld_pid = -1;
+            uiSaveTimeSpan = time(NULL) - uiForkStartTime;
+            uiForkStartTime = -1;
+
+            LOG(INFO) << "SaveTimeSpan : " << uiSaveTimeSpan << endl;
+        }
     }
-}
 
-void Server::RemoveTask(TaskMapItr &itr) {
-    if (itr->second && !itr->second->IsTerminate()) {
-        itr->second->Terminate("remove task");
-    }
-    objTaskMap.erase(itr);
-}
-
-void Server::AddTime(struct timeval &tvTime, int milliseconds) {
-    tvTime.tv_sec += milliseconds / 1000;
-    tvTime.tv_usec += milliseconds % 1000 * 1000;
-    if (tvTime.tv_usec >= 1000000)
-    {
-        tvTime.tv_sec++;
-        tvTime.tv_usec -= 1000000;
-    }
-}
-
-void Server::AddTimeout(ExpireTimer &timer) {
-    objTimerHeap.push(timer);
-}
-
-int Server::RemoveTimer(unsigned long long ullTimerID) {
     return 0;
 }
-
-void Server::ExpireTimers(struct timeval *next_timeout) {
-
-}
-
-void Server::StopService() {
-    bLoop_ = 0;
-}
-
 
 
 

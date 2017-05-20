@@ -13,52 +13,59 @@
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <sys/epoll.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/resource.h>
+#include <ctime>
 
+#include "mq_mgr.h"
 #include "server_config.h"
-#include "cepoll.h"
-#include "task.h"
 #include "singleton.h"
 #include "timer_heap.h"
+#include "application_base.h"
+#include "proto/bs_msg.pb.h"
+#include "proto/bs_cmd.pb.h"
+#include "proto/bs_errcode.pb.h"
+#include "db.h"
 
-class Server {
-    static const unsigned int LISTEN_TASK_POS = 0;
-    typedef std::unordered_map<unsigned int, TaskPtr> TaskMap;
-    typedef TaskMap::iterator TaskMapItr;
+class Server : public tnt::ApplicationBase {
 public:
-    Server();
-    ~Server();
+    // ApplicationBase
+    int OnInit(const char* conf_file) override;
+    int OnProc() override;
+    int OnTick() override;
+    int OnExit() override;
+    int OnStop() override;
+    int OnIdle() override;
 
-    int Run();
-
-    void StopService();
-
-private:
-    int Init();
-    int StartListen();
-    int MakeNonBlocking(int fd);
-
-    void HldAllEvs(struct epoll_event *evs, int nds);
-    int AcceptTask();
-    TaskPtr FindTask(unsigned int pos);
-    void RemoveTask(unsigned int pos);
-    void RemoveTask(TaskMapItr &itr);
-
-    //TODO 定时器操作
-    void AddTime(struct timeval &tvTime, int milliseconds);
-    void AddTimeout(ExpireTimer& timer);
-    int RemoveTimer(unsigned long long ullTimerID);
-    void ExpireTimers(struct timeval *next_timeout);
+    void CloseAllListenSockets();
 
 private:
-    bool bLoop_;
+    int ProcessMQRecv();
+    void ProcessMQMsg(const std::string &data);
 
-    //listen fd
-    int iSock_;
-    //epoll handle
-    unsigned int iPosCnt;
+    void ProcessDbSet();
+    void ProcessDbGetScore();
+    void ProcessDbRankQuery();
+    void ProcessDbRangeByRank();
+    void ProcessDbRangeByScore();
+    void ProcessDbTopQuery();
 
-    TaskMap objTaskMap;
-    TimerHeap objTimerHeap;
+    int Parse(::google::protobuf::Message &msg);
+
+    int Respone(const ::google::protobuf::Message &data);
+
+    //TODO 移除长时间没有响应的连接
+private:
+    bs_czl::MsgTransApp transApp;
+public:
+    int WaitChilen();
+
+    time_t uiLastSaveTime;
+    pid_t chilld_pid;
+    time_t uiForkStartTime;
+    time_t uiSaveTimeSpan;
 };
 
 typedef Singleton<Server> SingletonSvr;

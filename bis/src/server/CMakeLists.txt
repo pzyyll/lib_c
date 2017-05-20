@@ -4,6 +4,7 @@ project(server)
 set(INCLUDE ./include ./snslib)
 
 ##include/.h
+include_directories(../../deps/zeromq-4.2.1/include)
 include_directories(../../deps/protobuf-master/src/)
 include_directories(E:/LIB/linux_std_include/include)
 include_directories(C:\\cygwin64\\usr\\include)
@@ -27,9 +28,10 @@ set(CMAKE_CXX_STANDARD 11)
 set(SOURCE_FILES ${SOURCES}
         snslib/comm/buffer/recv_buffer.h
         proto/msg_head.h
-        skiplist.h skiplist.cpp
         include/singleton.h
-        include/log_def.h cmd.cpp cmd.h timer_heap.h)
+        include/log_def.h timer_heap.h db.cpp db.h mq_mgr.cpp mq_mgr.h
+        include/application_base.h include/application_base.cpp include/ansi_color.h include/ring_queue.h
+        sort_set.h sort_set.cpp skiplist.h sldb.cpp sldb.h)
 
 #set(TEMPH proto/src/bs_cmd.pb.h proto/src/bs_errcode.pb.h proto/src/bs_msg.pb.h)
 add_executable(server ${SOURCE_FILES})

@@ -3,5 +3,5 @@ project(skiplist)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(SOURCE_FILES main.cpp src/skiplist.h src/skiplist.cpp)
+set(SOURCE_FILES main.cpp src/skiplist.h src/sort_set.cpp src/sort_set.h)
 add_executable(skiplist ${SOURCE_FILES})

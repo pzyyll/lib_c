@@ -1,0 +1,38 @@
+CC=g++
+CPPFLAGS+= -g -Wall 
+INC_HEAD+= -I . -I .. \
+	 -I ../..\
+	-I ../../../../snslib
+
+INC_LIB+= ../../../../snslib/libsns.a
+
+RM=rm -rf
+
+TARGET=map_test
+
+all:$(TARGET)
+
+#像下面这行，是可以的，但是不通用。
+#map_test:map_test.o
+#	$(CC) $(INC_LIB) $< -o $@
+
+#像下面两行这样，是不能达到所期望的。可能对扩展规则不熟悉吧
+#%:%.o
+#	$(CC) $(INC_LIB) $< -o $@
+
+OBJS = $(TARGET:%=%.o)
+
+$(TARGET):$(OBJS)
+	$(CC) $< $(INC_LIB)  -o $@
+
+%.o:%.cpp
+	$(CC) $(CPPFLAGS)   $(INC_HEAD) $< $(INC_LIB)  -c  -o $@
+
+#%.o:%.cpp
+#	$(CC) $(CPPFLAGS) $(INC_HEAD) $(INC_LIB) -c $< -o $@
+
+
+
+clean:
+	-$(RM) $(TARGET)
+

@@ -11,6 +11,16 @@ int ServerConfig::Init(const char *cstrFileName) {
 
     CIniFile ini(cstrFileName);
 
+    //LOG
+    ini.GetString("LOG", "Path", "./log/", log_path_);
+    ini.GetInt("LOG", "Level", 0, &log_level_);
+
+    ret = InitLog();
+    if (ret < 0) {
+        cout << "Log Init Fail." << endl;
+        return 0;
+    }
+
     //SERVER
     ini.GetInt("SERVER", "Daemon", 1, &daemon_);
     ini.GetString("SERVER", "IP", "", ip_);
@@ -18,18 +28,32 @@ int ServerConfig::Init(const char *cstrFileName) {
     ini.GetInt("SERVER", "TimeOut", 0, &time_out_);
     ini.GetInt("SERVER", "FreeSleepTime", 0, &free_time_sleep_);
 
-    //LOG
-    ini.GetString("LOG", "Path", "./log/", log_path_);
-    ini.GetInt("LOG", "Level", 0, &log_level_);
+//    [MQ]
+    ini.GetString("MQ", "PullAddr", "", pull_addr_);
 
-    ret = InitLog();
+//    [DB]
 
-    cout << "==========SERVER============" << endl;
-    cout << "Daemon : " << daemon_ << endl;
-    cout << "IP     : " << ip_ << endl;
-    cout << "Port   : " << port_ << endl;
+    ini.GetString("DB", "DBFile", "./", db_file_);
+    ini.GetULongLong("DB", "FileMaxSize", 1024000000, &file_max_size_);
+    ini.GetInt("DB", "PersistendTime", 3600, &persistend_time_);
 
-    LOG_INFO("INIT SERVER");
+    cout  << "============INIT SERVER===============" << endl
+          << "Auth          : CaiZhiLi " << endl
+          << "Daemon        : " << daemon_ << endl
+          << "PullAddr      : " << pull_addr_ << endl
+          << "DBFile        : " << db_file_ << endl
+          << "FileMaxSize   : " << file_max_size_ << endl
+          << "PersistenTime : " << persistend_time_ << endl;
+
+    LOG(INFO) << "============INIT SERVER===============" << endl
+            << "Auth          : CaiZhiLi " << endl
+            << "Daemon        : " << daemon_ << endl
+            << "PullAddr      : " << pull_addr_ << endl
+            << "DBFile        : " << db_file_ << endl
+            << "FileMaxSize   : " << file_max_size_ << endl
+            << "PersistenTime : " << persistend_time_ << endl
+            << "===================================" << endl;
+
     return ret;
 }
 

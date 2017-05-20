@@ -1,0 +1,33 @@
+//
+// @create by czl
+// @brief 通信协议命令字
+//
+syntax = "proto3";
+package bs_czl;
+
+//import "other.proto"
+
+message BS_CMD {
+    enum ProtoclID {
+        MSG_INI = 0X0;
+        MSG_HEAD_CHECK = 0X0999;
+        MSG_SET_REQ = 0X1001;
+        MSG_SET_RSP = 0X1002;
+        MSG_SET_BATCH_REQ = 0X1003;
+        MSG_SET_BATCH_RSP = 0X1004;
+        MSG_GET_SCORE_REQ = 0X1005;
+        MSG_GET_SCORE_RSP = 0X1006;
+        MSG_GET_SCORE_BATCH_REQ = 0X1007;
+        MSG_GET_SCORE_BATCH_RSP = 0X1008;
+        MSG_RANK_QUERY_REQ = 0X1009;
+        MSG_RANK_QUERY_RSP = 0X1010;
+        MSG_RANK_BATCH_QUERY_REQ = 0X1011;
+        MSG_RANK_BATCH_QUERY_RSP = 0X1012;
+        MSG_RANGE_QUERY_REQ = 0X1013;
+        MSG_RANGE_QUERY_RSP = 0X1014;
+        MSG_RANGEBYSCORE_QUERY_REQ = 0X1015;
+        MSG_RANGEBYSCORE_QUERY_RSP = 0X1016;
+        MSG_TOP_QUERY_REQ = 0X1017;
+        MSG_TOP_QUERY_RSP = 0X1018;
+    }
+}

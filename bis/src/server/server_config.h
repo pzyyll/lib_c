@@ -34,7 +34,13 @@ public:
     int time_out_;
     int free_time_sleep_;
 
-    //[DB]
+//    [MQ]
+    std::string pull_addr_;
+
+//    [DB]
+    std::string db_file_;
+    unsigned long long file_max_size_;
+    int persistend_time_;
 
     //[LOG]
     std::string log_path_;
